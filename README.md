@@ -1,5 +1,7 @@
 # ICSSPulse
 
+Paper preprint link: https://doi.org/10.48550/arXiv.2602.20663
+
 ICSSPulse is an open-source, modular, web-based ICS penetration testing platform that unifies network scanning, protocol-aware Modbus and OPC UA interaction, and LLM-assisted reporting in one lightweight ecosystem.
 It is designed for safe and reproducible experimentation in labs and cyber-range style environments using simulated industrial services.
 

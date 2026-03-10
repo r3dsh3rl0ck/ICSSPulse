@@ -88,3 +88,11 @@ cd ICSSpulse
 pip install -r requirements.txt
 python3 app.py
 ```
+
+## References
+
+- [Docker](https://github.com/docker)
+- [RustScan](https://github.com/bee-san/RustScan)
+- [pymodbus](https://github.com/pymodbus-dev/pymodbus) 
+- [python-opcua](https://github.com/FreeOpcUa/python-opcua) 
+- [python-snap7](https://github.com/gijzelaerr/python-snap7) 

@@ -2,9 +2,18 @@
 
 Paper preprint link: https://doi.org/10.48550/arXiv.2602.20663
 
-## TODO
-- S7comm integration
-- MQTT integration
+## Functionality Table
+
+| Function | Status |
+|---|---|
+| `RustScan Call (Network Scanning)` | Completed ✅  |
+| `Modbus Handler` | Completed ✅ |
+| `OPC-UA Handler` | Completed ✅ |
+| `Cloud LLM report assistant (Opena AI GPT)` | Completed ✅ |
+| `S7comm integration` | On going |
+| `MQTT integration` | On going |
+| `Local LLM (ollama) usage for reporting` | On going |
+
 
 ICSSPulse is an open-source, modular, web-based ICS penetration testing platform that unifies network scanning, protocol-aware Modbus and OPC UA interaction, and LLM-assisted reporting in one lightweight ecosystem.
 It is designed for safe and reproducible experimentation in labs and cyber-range style environments using simulated industrial services.
@@ -31,6 +40,7 @@ It is designed for safe and reproducible experimentation in labs and cyber-range
 - `opcua_handler.py`: OPC UA PT module (endpoint/security discovery + browse/enumeration + read/write).
 - `report_gen.py`: LLM-assisted report generation logic (executive/technical modes).
 - `test-servers/`: Local test servers for Modbus and OPC UA to support training and experimentation.
+- `images/`: Contains helpful and relevant images
 
 ## Modules (what they do)
 

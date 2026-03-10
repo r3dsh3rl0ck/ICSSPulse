@@ -9,10 +9,10 @@ Paper preprint link: https://doi.org/10.48550/arXiv.2602.20663
 | `RustScan Call (Network Scanning)` | Completed ✅  |
 | `Modbus Handler` | Completed ✅ |
 | `OPC-UA Handler` | Completed ✅ |
-| `Cloud LLM report assistant (Opena AI GPT)` | Completed ✅ |
-| `S7comm integration` | On going |
-| `MQTT integration` | On going |
-| `Local LLM (ollama) usage for reporting` | On going |
+| `Cloud LLM report assistant (Open AI GPT)` | Completed ✅ |
+| `S7comm integration` | Ongoing |
+| `MQTT integration` | Ongoing |
+| `Local LLM (ollama) usage for reporting` | Ongoing |
 
 
 ICSSPulse is an open-source, modular, web-based ICS penetration testing platform that unifies network scanning, protocol-aware Modbus and OPC UA interaction, and LLM-assisted reporting in one lightweight ecosystem.

@@ -15,109 +15,454 @@
             border-color: #4b5563;
         }
         input:focus, select:focus {
-            --tw-ring-color: #fbbf24; /* amber-400 */
+            --tw-ring-color: #fbbf24;
             border-color: #fbbf24;
         }
-        label small { color: #9CA3AF; } /* gray-400 */
+        label small { color: #9CA3AF; }
+
+        /* File-upload button */
+        .file-label {
+            display: flex; align-items: center; gap: 0.5rem;
+            cursor: pointer;
+        }
+        .file-label .btn {
+            background: #4b5563; color: #f3f4f6;
+            padding: 0.35rem 0.8rem; border-radius: 0.375rem;
+            font-size: 0.8rem; white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .file-label:hover .btn { background: #6b7280; }
+        .file-label .fname { color: #9ca3af; font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        input[type="file"] { display: none; }
+
+        /* Cert badge */
+        .cert-badge {
+            display: flex; align-items: center; gap: 0.6rem;
+            background: rgba(20,83,45,0.45);
+            border: 1px solid #166534;
+            border-radius: 0.5rem;
+            padding: 0.55rem 0.85rem;
+        }
+        .cert-badge .badge-icon  { color: #4ade80; flex-shrink:0; }
+        .cert-badge .badge-name  { font-family:'Fira Code',monospace; font-size:0.8rem; color:#bbf7d0; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+        .cert-badge .badge-size  { font-size:0.72rem; color:#6b7280; white-space:nowrap; }
+        .cert-badge .remove-btn  {
+            flex-shrink:0; background:rgba(127,29,29,0.5); border:1px solid #7f1d1d;
+            color:#fca5a5; border-radius:0.35rem; padding:0.2rem 0.55rem;
+            font-size:0.75rem; cursor:pointer; transition:background 0.2s;
+        }
+        .cert-badge .remove-btn:hover { background:rgba(185,28,28,0.7); }
+
+        /* Collapsible hint */
+        details > summary { cursor:pointer; list-style:none; }
+        details > summary::-webkit-details-marker { display:none; }
+        details[open] summary .chevron { transform:rotate(90deg); }
+        .chevron { display:inline-block; transition:transform 0.2s; }
+
+        /* Smooth field transitions */
+        .field-row { transition: opacity 0.15s ease; }
     </style>
 </head>
 <body class="text-gray-200">
-    <div class="container mx-auto p-4 md:p-8">
-        <div class="max-w-7xl mx-auto">
-            <a href="/" class="text-yellow-400 hover:text-yellow-300 mb-6 inline-block">&larr; Back to Menu</a>
-            <div class="text-center mb-8">
-                 <h1 class="text-3xl font-bold text-white">OPC UA Controller</h1>
-            </div>
+<div class="container mx-auto p-4 md:p-8">
+<div class="max-w-7xl mx-auto">
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="bg-gray-800 rounded-lg shadow-2xl p-6 border border-gray-700">
-                    <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">Parameters</h2>
-                    <form method="post">
-                        <input type="hidden" name="protocol" value="opcua">
+    <a href="/" class="text-yellow-400 hover:text-yellow-300 mb-6 inline-block">&larr; Back to Menu</a>
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-white">OPC UA Controller</h1>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <!-- ═══════════════════  PARAMETERS PANEL  ═══════════════════ -->
+        <div class="bg-gray-800 rounded-lg shadow-2xl p-6 border border-gray-700">
+            <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">Parameters</h2>
+
+            <form method="post" enctype="multipart/form-data" id="opcuaForm">
+                <input type="hidden" name="protocol" value="opcua">
+
+                <!-- ── ALWAYS VISIBLE FIELDS ──────────────────────────────── -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <!-- Action (always) -->
+                    <div class="md:col-span-2">
+                        <label for="action" class="block mb-2 text-sm font-medium text-gray-300">Action</label>
+                        <select name="action" id="action"
+                                class="w-full rounded-lg p-2.5 text-white focus:ring-2"
+                                required
+                                onchange="updateFields()">
+                            <option value="discover"   {% if values.get('action','discover')=='discover'   %}selected{% endif %}>Discover Endpoints</option>
+                            <option value="browse"     {% if values.get('action')=='browse'     %}selected{% endif %}>Browse (tree)</option>
+                            <option value="enumerate"  {% if values.get('action')=='enumerate'  %}selected{% endif %}>Enumerate Variables</option>
+                            <option value="read_only"  {% if values.get('action')=='read_only'  %}selected{% endif %}>Readable Variables Only</option>
+                            <option value="write_only" {% if values.get('action')=='write_only' %}selected{% endif %}>Writable Variables Only</option>
+                            <option value="read"       {% if values.get('action')=='read'       %}selected{% endif %}>Read</option>
+                            <option value="write"      {% if values.get('action')=='write'      %}selected{% endif %}>Write</option>
+                        </select>
+                    </div>
+
+                    <!-- Target (always) -->
+                    <div id="row_target" class="field-row">
+                        <label for="target" class="block mb-2 text-sm font-medium text-gray-300">Target IP / Hostname</label>
+                        <input type="text" name="target" id="target" required
+                               class="w-full rounded-lg p-2.5 text-white focus:ring-2"
+                               placeholder="e.g., 127.0.0.1"
+                               value="{{ values.get('target', '') }}">
+                    </div>
+
+                    <!-- Port (always) -->
+                    <div id="row_port" class="field-row">
+                        <label for="port" class="block mb-2 text-sm font-medium text-gray-300">Port</label>
+                        <input type="number" name="port" id="port" required
+                               class="w-full rounded-lg p-2.5 text-white focus:ring-2"
+                               value="{{ values.get('port', '4840') }}">
+                    </div>
+
+                    <!-- Endpoint Path (always) -->
+                    <div id="row_endpoint" class="field-row md:col-span-2">
+                        <label for="endpoint_path" class="block mb-2 text-sm font-medium text-gray-300">
+                            Endpoint Path <small>(blank for root, e.g., freeopcua/server/)</small>
+                        </label>
+                        <input type="text" name="endpoint_path" id="endpoint_path"
+                               class="w-full rounded-lg p-2.5 text-white focus:ring-2"
+                               value="{{ values.get('endpoint_path', 'freeopcua/server/') }}">
+                    </div>
+
+                    <!-- ── AUTH — hidden for: discover ─────────────────────── -->
+                    <div id="row_auth" class="field-row md:col-span-2">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label for="action" class="block mb-2 text-sm font-medium text-gray-300">Action</label>
-                                <select name="action" id="action" class="w-full rounded-lg p-2.5 text-white focus:ring-2" required>
-                                    <option value="discover" {% if values.get('action', 'discover') == 'discover' %}selected{% endif %}>Discover Endpoints</option>
-                                    <option value="browse" {% if values.get('action') == 'browse' %}selected{% endif %}>Browse (tree)</option>
-                                    <option value="enumerate" {% if values.get('action') == 'enumerate' %}selected{% endif %}>Enumerate Variables</option>
-                                    <option value="read" {% if values.get('action') == 'read' %}selected{% endif %}>Read</option>
-                                    <option value="write" {% if values.get('action') == 'write' %}selected{% endif %}>Write</option>
-                                </select>
+                                <label for="username" class="block mb-2 text-sm font-medium text-gray-300">
+                                    Username <small>(optional)</small>
+                                </label>
+                                <input type="text" name="username" id="username"
+                                       class="w-full rounded-lg p-2.5 text-white focus:ring-2"
+                                       placeholder="e.g., admin"
+                                       value="{{ values.get('username', '') }}">
                             </div>
                             <div>
-                                <label for="target" class="block mb-2 text-sm font-medium text-gray-300">Target IP/Hostname</label>
-                                <input type="text" name="target" id="target" class="w-full rounded-lg p-2.5 text-white focus:ring-2" required placeholder="e.g., 127.0.0.1" value="{{ values.get('target', '') }}">
-                            </div>
-                            <div>
-                                <label for="port" class="block mb-2 text-sm font-medium text-gray-300">Port</label>
-                                <input type="number" name="port" id="port" class="w-full rounded-lg p-2.5 text-white focus:ring-2" value="{{ values.get('port', '4840') }}" required>
-                            </div>
-                            <div>
-                                <label for="endpoint_path" class="block mb-2 text-sm font-medium text-gray-300">Endpoint Path <small>(blank or e.g., freeopcua/server/)</small></label>
-                                <input type="text" name="endpoint_path" id="endpoint_path" class="w-full rounded-lg p-2.5 text-white focus:ring-2" value="{{ values.get('endpoint_path', 'freeopcua/server/') }}">
-                            </div>
-                            <div>
-                                <label for="username" class="block mb-2 text-sm font-medium text-gray-300">Username (optional)</label>
-                                <input type="text" name="username" id="username" class="w-full rounded-lg p-2.5 text-white focus:ring-2"
-                                    value="{{ values.get('username', '') }}" placeholder="e.g., admin">
-                            </div>
-                            <div>
-                                <label for="password" class="block mb-2 text-sm font-medium text-gray-300">Password (optional)</label>
-                                <input type="password" name="password" id="password" class="w-full rounded-lg p-2.5 text-white focus:ring-2"
-                                    value="{{ values.get('password', '') }}">
-                            </div>
-
-
-                            <!-- Read/Write specifics -->
-                            <div class="md:col-span-2">
-                                <label for="nodeid" class="block mb-2 text-sm font-medium text-gray-300">NodeId <small>(for read/write, e.g., ns=2;i=10)</small></label>
-                                <input type="text" name="nodeid" id="nodeid" class="w-full rounded-lg p-2.5 text-white focus:ring-2" placeholder="ns=2;i=10" value="{{ values.get('nodeid', '') }}">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label for="value" class="block mb-2 text-sm font-medium text-gray-300">Value (for write)</label>
-                                <input type="text" name="value" id="value" class="w-full rounded-lg p-2.5 text-white focus:ring-2" placeholder="true / 42 / 3.14 / hello" value="{{ values.get('value', '') }}">
-                            </div>
-
-                            <!-- Browse / Enumerate knobs -->
-                            <div>
-                                <label for="max_depth" class="block mb-2 text-sm font-medium text-gray-300">Max Depth (browse)</label>
-                                <input type="number" name="max_depth" id="max_depth" class="w-full rounded-lg p-2.5 text-white focus:ring-2" value="{{ values.get('max_depth', '3') }}">
-                            </div>
-                            <div>
-                                <label for="max_nodes" class="block mb-2 text-sm font-medium text-gray-300">Max Nodes (browse/enumerate)</label>
-                                <input type="number" name="max_nodes" id="max_nodes" class="w-full rounded-lg p-2.5 text-white focus:ring-2" value="{{ values.get('max_nodes', '200') }}">
-                            </div>
-                            <div>
-                                <label for="namespace" class="block mb-2 text-sm font-medium text-gray-300">Namespace Filter (enumerate)</label>
-                                <input type="number" name="namespace" id="namespace" class="w-full rounded-lg p-2.5 text-white focus:ring-2" placeholder="e.g., 2" value="{{ values.get('namespace', '') }}">
-                            </div>
-
-                            <!-- Common -->
-                            <div>
-                                <label for="timeout" class="block mb-2 text-sm font-medium text-gray-300">Timeout (s)</label>
-                                <input type="number" name="timeout" id="timeout" class="w-full rounded-lg p-2.5 text-white focus:ring-2" value="{{ values.get('timeout', '3') }}">
-                            </div>
-                            <div>
-                                <label for="retries" class="block mb-2 text-sm font-medium text-gray-300">Retries</label>
-                                <input type="number" name="retries" id="retries" class="w-full rounded-lg p-2.5 text-white focus:ring-2" value="{{ values.get('retries', '3') }}">
+                                <label for="password" class="block mb-2 text-sm font-medium text-gray-300">
+                                    Password <small>(optional)</small>
+                                </label>
+                                <input type="password" name="password" id="password"
+                                       class="w-full rounded-lg p-2.5 text-white focus:ring-2"
+                                       value="{{ values.get('password', '') }}">
                             </div>
                         </div>
-                        <button type="submit" class="mt-6 w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 px-6 rounded-lg transition duration-300">Execute</button>
-                        <p class="text-xs text-gray-400 mt-3">
-                            Note: This client uses Anonymous authentication and no channel security by default. Make sure your test server allows it.
-                        </p>
-                    </form>
-                </div>
-
-                <div class="bg-gray-800 rounded-lg shadow-2xl p-6 border border-gray-700">
-                    <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">Output</h2>
-                    <div class="bg-black rounded-lg p-4 h-96 overflow-y-auto">
-                        <pre class="text-sm whitespace-pre-wrap fira-code text-gray-300">{{ output | safe }}</pre>
                     </div>
-                </div>
+
+                    <!-- ── NODE ID — only for: read, write ─────────────────── -->
+                    <div id="row_nodeid" class="field-row md:col-span-2">
+                        <label for="nodeid" class="block mb-2 text-sm font-medium text-gray-300">
+                            NodeId <small>(e.g., ns=2;i=10)</small>
+                        </label>
+                        <input type="text" name="nodeid" id="nodeid"
+                               class="w-full rounded-lg p-2.5 text-white focus:ring-2"
+                               placeholder="ns=2;i=10"
+                               value="{{ values.get('nodeid', '') }}">
+                    </div>
+
+                    <!-- ── VALUE — only for: write ─────────────────────────── -->
+                    <div id="row_value" class="field-row md:col-span-2">
+                        <label for="value" class="block mb-2 text-sm font-medium text-gray-300">
+                            Value <small>(write target value)</small>
+                        </label>
+                        <input type="text" name="value" id="value"
+                               class="w-full rounded-lg p-2.5 text-white focus:ring-2"
+                               placeholder="true / 42 / 3.14 / hello"
+                               value="{{ values.get('value', '') }}">
+                    </div>
+
+                    <!-- ── MAX DEPTH — browse, enumerate, read_only, write_only -->
+                    <div id="row_max_depth" class="field-row">
+                        <label for="max_depth" class="block mb-2 text-sm font-medium text-gray-300">
+                            Max Depth <small>(tree levels)</small>
+                        </label>
+                        <input type="number" name="max_depth" id="max_depth"
+                               class="w-full rounded-lg p-2.5 text-white focus:ring-2"
+                               value="{{ values.get('max_depth', '3') }}">
+                    </div>
+
+                    <!-- ── MAX NODES — browse, enumerate, read_only, write_only -->
+                    <div id="row_max_nodes" class="field-row">
+                        <label for="max_nodes" class="block mb-2 text-sm font-medium text-gray-300">
+                            Max Nodes <small>(budget)</small>
+                        </label>
+                        <input type="number" name="max_nodes" id="max_nodes"
+                               class="w-full rounded-lg p-2.5 text-white focus:ring-2"
+                               value="{{ values.get('max_nodes', '200') }}">
+                    </div>
+
+                    <!-- ── NAMESPACE — enumerate, read_only, write_only ──────── -->
+                    <div id="row_namespace" class="field-row">
+                        <label for="namespace" class="block mb-2 text-sm font-medium text-gray-300">
+                            Namespace Filter <small>(e.g., 2)</small>
+                        </label>
+                        <input type="number" name="namespace" id="namespace"
+                               class="w-full rounded-lg p-2.5 text-white focus:ring-2"
+                               placeholder="blank = all"
+                               value="{{ values.get('namespace', '') }}">
+                    </div>
+
+                    <!-- ── TIMEOUT & RETRIES (always) ─────────────────────── -->
+                    <div id="row_timeout" class="field-row">
+                        <label for="timeout" class="block mb-2 text-sm font-medium text-gray-300">Timeout (s)</label>
+                        <input type="number" name="timeout" id="timeout"
+                               class="w-full rounded-lg p-2.5 text-white focus:ring-2"
+                               value="{{ values.get('timeout', '3') }}">
+                    </div>
+                    <div id="row_retries" class="field-row">
+                        <label for="retries" class="block mb-2 text-sm font-medium text-gray-300">Retries</label>
+                        <input type="number" name="retries" id="retries"
+                               class="w-full rounded-lg p-2.5 text-white focus:ring-2"
+                               value="{{ values.get('retries', '3') }}">
+                    </div>
+
+                </div><!-- /main grid -->
+
+                <!-- ═══════════════  SECURITY SECTION  ═══════════════════
+                     Hidden for: discover
+                     id="row_security" is the toggle target                -->
+                <div id="row_security" class="mt-6 border-t border-gray-700 pt-4">
+                    <h3 class="text-base font-semibold text-yellow-400 mb-3">🔒 Channel Security (Certificate-Based)</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        <div>
+                            <label for="security_mode" class="block mb-2 text-sm font-medium text-gray-300">Security Mode</label>
+                            <select name="security_mode" id="security_mode"
+                                    class="w-full rounded-lg p-2.5 text-white focus:ring-2"
+                                    onchange="toggleCertSection()">
+                                <option value="0" {% if values.get('security_mode','0')=='0' %}selected{% endif %}>None (Anonymous / no encryption)</option>
+                                <option value="2" {% if values.get('security_mode')=='2' %}selected{% endif %}>Sign</option>
+                                <option value="3" {% if values.get('security_mode')=='3' %}selected{% endif %}>SignAndEncrypt</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block mb-2 text-sm font-medium text-gray-300">Security Policy</label>
+                            <input type="text" readonly
+                                   class="w-full rounded-lg p-2.5 text-yellow-300 bg-gray-700 border border-gray-600 cursor-not-allowed"
+                                   value="Basic256Sha256">
+                        </div>
+
+                    </div>
+
+                    <!-- Cert / Key block — shown only when mode != None -->
+                    <div id="cert_section" class="mt-4 space-y-4" style="display:none;">
+
+                        <div>
+                            <label for="app_uri" class="block mb-2 text-sm font-medium text-gray-300">
+                                Application URI <small>(must match SAN URI in your certificate)</small>
+                            </label>
+                            <input type="text" name="app_uri" id="app_uri"
+                                   class="w-full rounded-lg p-2.5 text-white focus:ring-2"
+                                   placeholder="urn:ctf:python-opcua-client"
+                                   value="{{ values.get('app_uri', 'urn:ctf:python-opcua-client') }}">
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            <!-- client_cert.der -->
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-300">
+                                    Client Certificate <small>(.der)</small>
+                                </label>
+                                <div id="cert_badge" {% if not cert_exists %}style="display:none;"{% endif %}>
+                                    <div class="cert-badge">
+                                        <svg class="badge-icon w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <span class="badge-name">client_cert.der</span>
+                                        <span class="badge-size">{{ cert_kb }} KB</span>
+                                        <button type="button" class="remove-btn" onclick="deleteCertFile('cert')">✕ Remove</button>
+                                    </div>
+                                </div>
+                                <div id="cert_upload" {% if cert_exists %}style="display:none;"{% endif %}>
+                                    <label class="file-label w-full rounded-lg border border-gray-600 p-2.5">
+                                        <span class="btn">Choose .der</span>
+                                        <span class="fname" id="cert_fname">No file chosen</span>
+                                        <input type="file" name="cert_file" id="cert_file" accept=".der"
+                                               onchange="previewFile('cert_file','cert_fname')">
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- client_key.pem -->
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-300">
+                                    Private Key <small>(.pem)</small>
+                                </label>
+                                <div id="key_badge" {% if not key_exists %}style="display:none;"{% endif %}>
+                                    <div class="cert-badge">
+                                        <svg class="badge-icon w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <span class="badge-name">client_key.pem</span>
+                                        <span class="badge-size">{{ key_kb }} KB</span>
+                                        <button type="button" class="remove-btn" onclick="deleteCertFile('key')">✕ Remove</button>
+                                    </div>
+                                </div>
+                                <div id="key_upload" {% if key_exists %}style="display:none;"{% endif %}>
+                                    <label class="file-label w-full rounded-lg border border-gray-600 p-2.5">
+                                        <span class="btn">Choose .pem</span>
+                                        <span class="fname" id="key_fname">No file chosen</span>
+                                        <input type="file" name="key_file" id="key_file" accept=".pem"
+                                               onchange="previewFile('key_file','key_fname')">
+                                    </label>
+                                </div>
+                            </div>
+
+                        </div><!-- /cert+key grid -->
+
+                        <!-- OpenSSL hint -->
+                        <details class="bg-gray-900 rounded-lg border border-gray-700">
+                            <summary class="px-4 py-2 text-sm font-medium text-yellow-300 flex items-center gap-2 select-none">
+                                <span class="chevron">&#9658;</span>
+                                How to generate a self-signed client certificate
+                            </summary>
+                            <div class="px-4 pb-4 pt-2">
+                                <p class="text-xs text-gray-400 mb-2">
+                                    Run these two commands to create <code class="text-yellow-300">client_cert.der</code>
+                                    and <code class="text-yellow-300">client_key.pem</code>.
+                                    The <em>subjectAltName URI</em> must match the Application URI above.
+                                </p>
+                                <pre class="text-xs fira-code text-green-300 bg-black rounded p-3 overflow-x-auto">openssl req -x509 -newkey rsa:2048 \
+  -keyout client_key.pem \
+  -out client_cert.pem \
+  -days 365 -nodes \
+  -addext "subjectAltName = URI:urn:ctf:python-opcua-client"
+
+openssl x509 -outform der -in client_cert.pem -out client_cert.der</pre>
+                                <p class="text-xs text-gray-500 mt-2">
+                                    Upload <code>client_cert.der</code> + <code>client_key.pem</code> above.
+                                    The server must have your certificate in its trust list beforehand.
+                                </p>
+                            </div>
+                        </details>
+
+                    </div><!-- /cert_section -->
+                </div><!-- /row_security -->
+
+                <button type="submit"
+                        class="mt-6 w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                    Execute
+                </button>
+                <p class="text-xs text-gray-400 mt-3" id="hint_text"></p>
+
+            </form>
+        </div><!-- /parameters panel -->
+
+        <!-- ═══════════════════  OUTPUT PANEL  ═══════════════════════ -->
+        <div class="bg-gray-800 rounded-lg shadow-2xl p-6 border border-gray-700">
+            <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">Output</h2>
+            <div class="bg-black rounded-lg p-4 h-[34rem] overflow-y-auto">
+                <pre class="text-sm whitespace-pre-wrap fira-code text-gray-300">{{ output | safe }}</pre>
             </div>
         </div>
-    </div>
+
+    </div><!-- /page grid -->
+</div>
+</div>
+
+<!-- ═══════════════════════════  JavaScript  ══════════════════════════════════ -->
+<script>
+// ─── Field visibility config ─────────────────────────────────────────────────
+// Lists which *optional* row IDs are visible for each action.
+// Rows always visible: row_target, row_port, row_endpoint, row_timeout, row_retries.
+const ACTION_FIELDS = {
+    discover:   [],
+    browse:     ['row_auth', 'row_max_depth', 'row_max_nodes',                          'row_security'],
+    enumerate:  ['row_auth', 'row_max_depth', 'row_max_nodes', 'row_namespace',         'row_security'],
+    read_only:  ['row_auth', 'row_max_depth', 'row_max_nodes', 'row_namespace',         'row_security'],
+    write_only: ['row_auth', 'row_max_depth', 'row_max_nodes', 'row_namespace',         'row_security'],
+    read:       ['row_auth',                                                'row_nodeid','row_security'],
+    write:      ['row_auth',                                   'row_nodeid','row_value', 'row_security'],
+};
+
+// All optional row IDs (rows absent from the "always visible" list above)
+const OPTIONAL_ROWS = [
+    'row_auth',
+    'row_nodeid', 'row_value',
+    'row_max_depth', 'row_max_nodes', 'row_namespace',
+    'row_security',
+];
+
+// Friendly hint shown below the submit button
+const ACTION_HINTS = {
+    discover:   'Returns all endpoints advertised by the server, including their security modes.',
+    browse:     'Walks the node tree under the Objects folder up to Max Depth.',
+    enumerate:  'Lists all Variable nodes with their data type, access level, and current value.',
+    read_only:  'Like Enumerate, but shows only nodes where AccessLevel includes CurrentRead.',
+    write_only: 'Like Enumerate, but shows only nodes where AccessLevel includes CurrentWrite.',
+    read:       'Reads the current value of a single node specified by NodeId.',
+    write:      'Writes a new value to a single node specified by NodeId.',
+};
+
+// ─── Show / hide rows based on selected action ────────────────────────────────
+function updateFields() {
+    const action  = document.getElementById('action').value;
+    const visible = ACTION_FIELDS[action] || [];
+
+    OPTIONAL_ROWS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = visible.includes(id) ? '' : 'none';
+    });
+
+    // Update hint text
+    const hint = document.getElementById('hint_text');
+    if (hint) hint.textContent = ACTION_HINTS[action] || '';
+
+    // Re-evaluate cert sub-section (only matters when row_security is visible)
+    toggleCertSection();
+}
+
+// ─── Show / hide cert upload area inside the security block ──────────────────
+function toggleCertSection() {
+    const mode = document.getElementById('security_mode').value;
+    const el   = document.getElementById('cert_section');
+    if (el) el.style.display = (mode !== '0') ? '' : 'none';
+}
+
+// ─── Update filename label next to upload button ──────────────────────────────
+function previewFile(inputId, spanId) {
+    const input = document.getElementById(inputId);
+    const span  = document.getElementById(spanId);
+    if (input.files.length) span.textContent = input.files[0].name;
+}
+
+// ─── Delete a stored cert/key file via fetch (no page reload) ─────────────────
+async function deleteCertFile(type) {
+    const badge  = document.getElementById(`${type}_badge`);
+    const upload = document.getElementById(`${type}_upload`);
+    // Optimistic swap
+    badge.style.display  = 'none';
+    upload.style.display = '';
+
+    try {
+        const res  = await fetch('/opcua/delete_cert', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ file: type }),
+        });
+        const data = await res.json();
+        if (!data.ok) {
+            badge.style.display  = '';   // revert on error
+            upload.style.display = 'none';
+            alert(`Failed to remove file: ${data.error || 'unknown error'}`);
+        }
+    } catch (err) {
+        badge.style.display  = '';
+        upload.style.display = 'none';
+        alert(`Network error: ${err}`);
+    }
+}
+
+// ─── Initialise on page load ──────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+    updateFields();     // sets field visibility + hint for current action
+    toggleCertSection(); // sets cert sub-section based on security mode
+});
+</script>
 </body>
 </html>

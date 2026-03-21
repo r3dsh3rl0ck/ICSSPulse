@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  icsspulse-light:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: icsspulse-light
+    image: icsspulse-light:latest
+    ports:
+      - "4444:4444"
+    environment:
+      - FLASK_ENV=production
+      - FLASK_APP=app.py
+    volumes:
+      - ./opcua_certs:/app/opcua_certs:rw
+      - ./static:/app/static:ro
+      - ./templates:/app/templates:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4444/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes: {}
+
+networks:
+  default:
+    name: icsspulse-light-network
+    driver: bridge

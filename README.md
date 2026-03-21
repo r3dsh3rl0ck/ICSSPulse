@@ -26,6 +26,7 @@
 - [Penetration Testing Lifecycle Coverage](#-penetration-testing-lifecycle-coverage)
 - [Requirements](#-requirements)
 - [Installation](#-installation)
+- [ICSSPulse Light — Docker Edition](#-icsspulse-light--docker-edition)
 - [Usage](#-usage)
   - [Network Scanner](#-network-scanner)
   - [Modbus Handler](#-modbus-handler)
@@ -106,7 +107,7 @@ Docker          (for RustScan network scanning)
 
 ---
 
-## 🚀 Installation
+## 🚀 Installation - Full Version
 
 ```bash
 # 1. Clone the repository
@@ -135,6 +136,18 @@ python app.py
 Then open your browser at **`http://127.0.0.1:5000`**.
 
 ---
+
+## 🐳 ICSSPulse Light — Docker Edition
+
+A minimal, self-contained containerised version of ICSSPulse. No Python environment setup required — just Docker.
+
+> **Includes:** Modbus TCP Handler · OPC UA Handler  
+> **Excludes:** Network Scanner · LLM Reporting
+
+```bash
+cd icsspulse-light
+# Follow the instructions there
+```
 
 ## 🔧 Usage
 

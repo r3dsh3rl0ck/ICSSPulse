@@ -1,6 +1,6 @@
 <div align="center">
 
-![logo](/images/icsspulse-logo.png){width=200px}
+![logo](/images/icsspulse-logo.png)
 
 ### A Modular LLM-Assisted Platform for Industrial Control System Penetration Testing
 

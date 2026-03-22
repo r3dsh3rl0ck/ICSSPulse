@@ -1,6 +1,7 @@
 <div align="center">
 
-![logo](/images/icsspulse-logo.png)
+<img src="/images/icsspulse-logo-white-bg.png" alt="logo" style="border-radius: 50%; width: 500px; object-fit: cover;"/>
+
 
 ### A Modular LLM-Assisted Platform for Industrial Control System Penetration Testing
 
@@ -8,8 +9,6 @@
 > **A web-based platform that unifies network scanning, protocol-aware Modbus & OPC UA interaction, and LLM-assisted reporting in a single lightweight ICS pentesting ecosystem.**
 
 </div>
-
-
 
 ---
 

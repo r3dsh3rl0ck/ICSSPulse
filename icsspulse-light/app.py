@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, jsonify
+import snap7
 
 # Load environment variables
 env_path = Path(__file__).with_name('f.env')
@@ -20,6 +21,12 @@ try:
 except ImportError:
     def handle_opcua(args):
         return f"--- DUMMY OPC UA HANDLER ---\nTarget: {args.target}:{args.port}"
+    
+try:
+    from s7comm_handler import handle_s7comm
+except ImportError:
+    def handle_opcua(args):
+        return f"--- DUMMY s7comm HANDLER ---\nTarget: {args.target}:{args.port}"
 
 app = Flask(__name__)
 
@@ -162,6 +169,37 @@ def opcua_delete_cert():
             return jsonify({'ok': False, 'error': str(e)}), 500
 
     return jsonify({'ok': True})
+
+
+@app.route('/s7comm', methods=['GET', 'POST'])
+def s7comm_page():
+    output      = ''
+    form_values = {}
+
+    if request.method == 'POST':
+        form_values = request.form.to_dict()
+
+        class Args:
+            def __init__(self):
+                self.action    = form_values.get('action', 'plc_info')
+                self.target    = form_values.get('target', '')
+                self.port      = int(form_values.get('port', 102))
+                self.rack      = int(form_values.get('rack', 0))
+                self.slot      = int(form_values.get('slot', 1))
+                self.timeout   = int(form_values.get('timeout', 5))
+                self.retries   = int(form_values.get('retries', 2))
+                self.db_number = form_values.get('db_number', '1')
+                self.start     = int(form_values.get('start', 0))
+                self.size      = int(form_values.get('size', 64))
+                self.data_type = form_values.get('data_type', 'RAW')
+                self.value     = form_values.get('value', '')
+                self.area      = form_values.get('area', 'M')
+                self.max_dbs   = int(form_values.get('max_dbs', 100))
+                self.szl_id    = form_values.get('szl_id', '')
+
+        output = handle_s7comm(Args())
+
+    return render_template('s7comm.html', output=output, values=form_values)
 
 # -------------------------
 # Main

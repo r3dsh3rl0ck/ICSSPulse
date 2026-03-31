@@ -12,10 +12,16 @@
 </head>
 <body class="text-gray-200">
     <div class="min-h-screen flex flex-col items-center justify-center p-4">
-        <div class="text-center mb-10">
-            <h1 class="text-5xl font-bold text-white">ICSSPulse</h1>
-            <p class="text-xl text-gray-400 mt-2">Secure the Core, Pulse with Confidence</p>
+        <div class="min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="text-center mb-4">
+        <div class="bg-gray-800 px-0 py-3 border border-gray-800 rounded-lg hover:border-red-500 hover:bg-gray-400 transition-all duration-300 group">
+            <img src="{{ url_for('static', filename='images/icsspulse-logo.png') }}"
+                alt="ICSSPulse"
+                class="h-60 w-auto mx-auto">
+                <p class="font-bold text-red-500">ICS Penetration Testing Plaform</p>
+                
         </div>
+    </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8 max-w-6xl w-full">
             <!-- Scanner Card -->
@@ -37,6 +43,13 @@
                 <h2 class="text-2xl font-bold text-white mb-3">OPC UA Controller</h2>
                 <p class="text-gray-400 mb-4">Directly interact with OPC UA nodes.</p>
                 <span class="font-semibold text-yellow-400 group-hover:underline">Open Controller &rarr;</span>
+            </a>
+
+            <!-- S7comm Card -->
+            <a href="/s7comm" class="bg-gray-800 p-8 rounded-xl border border-gray-700 hover:border-violet-500 hover:bg-gray-900 transition-all duration-300 group">
+                <h2 class="text-2xl font-bold text-white mb-3">S7comm Controller</h2>
+                <p class="text-gray-400 mb-4">Directly interact with ICS devices using the s7comm protocol.</p>
+                <span class="font-semibold text-violet-400 group-hover:underline">Open Controller &rarr;</span>
             </a>
 
             <!-- Report Center Card (NEW) -->

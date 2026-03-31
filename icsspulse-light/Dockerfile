@@ -15,7 +15,7 @@ RUN pip install --user --no-cache-dir -r requirements.txt
 FROM python:3.11-slim
 
 LABEL maintainer="r3dsh3rl0ck"
-LABEL description="ICSSPulse Light: Protocol Controllers (Modbus & OPC UA)"
+LABEL description="ICSSPulse Light: Protocol Controllers"
 
 WORKDIR /app
 
@@ -32,6 +32,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 COPY app.py .
 COPY modbus_handler.py .
 COPY opcua_handler.py .
+COPY s7comm_handler.py .
 COPY f.env .
 COPY docker-entrypoint.sh .
 COPY templates/ ./templates/

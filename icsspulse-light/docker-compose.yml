@@ -30,8 +30,3 @@ services:
         max-file: "3"
 
 volumes: {}
-
-networks:
-  default:
-    name: icsspulse-light-network
-    driver: bridge

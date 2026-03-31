@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICSSPulse - S7comm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #111827; font-family: 'Inter', sans-serif; }
+        .fira  { font-family: 'Fira Code', monospace; }
+        input, select {
+            background-color: #374151;
+            border-color: #4b5563;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #a78bfa;   /* violet-400 */
+            box-shadow: 0 0 0 2px rgba(167,139,250,0.25);
+        }
+        label small { color: #9CA3AF; }
+    </style>
+</head>
+<body class="text-gray-200">
+<div class="container mx-auto p-4 md:p-8">
+<div class="max-w-7xl mx-auto">
+
+    <a href="/" class="text-violet-400 hover:text-violet-300 mb-6 inline-block">&larr; Back to Menu</a>
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-white">S7comm Controller</h1>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <!-- ═══════════════  PARAMETERS  ═══════════════════════════════════ -->
+        <div class="bg-gray-800 rounded-lg shadow-2xl p-6 border border-gray-700">
+            <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">Parameters</h2>
+
+            <form method="post" id="s7Form">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <!-- Action — always visible -->
+                    <div class="md:col-span-2">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Action</label>
+                        <select name="action" id="action"
+                                class="w-full rounded-lg p-2.5 text-white" required
+                                onchange="updateFields()">
+                            <option value="plc_info"    {% if values.get('action','plc_info')=='plc_info'    %}selected{% endif %}>PLC Info (Fingerprint)</option>
+                            <option value="list_blocks" {% if values.get('action')=='list_blocks' %}selected{% endif %}>List Blocks (Count)</option>
+                            <option value="db_list"     {% if values.get('action')=='db_list'     %}selected{% endif %}>DB List (Enumerate DBs)</option>
+                            <option value="db_read"     {% if values.get('action')=='db_read'     %}selected{% endif %}>DB Read</option>
+                            <option value="db_write"    {% if values.get('action')=='db_write'    %}selected{% endif %}>DB Write</option>
+                            <option value="area_read"   {% if values.get('action')=='area_read'   %}selected{% endif %}>Area Read  (I/Q/M/T/C)</option>
+                            <option value="area_write"  {% if values.get('action')=='area_write'  %}selected{% endif %}>Area Write (I/Q/M)</option>
+                            <option value="szl_read"    {% if values.get('action')=='szl_read'    %}selected{% endif %}>SZL Read (Diagnostics)</option>
+                        </select>
+                    </div>
+
+                    <!-- Target — always visible -->
+                    <div class="md:col-span-2">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Target IP</label>
+                        <input type="text" name="target" required
+                               class="w-full rounded-lg p-2.5 text-white"
+                               placeholder="e.g., 192.168.0.1"
+                               value="{{ values.get('target', '') }}">
+                    </div>
+
+                    <!-- Port / Rack / Slot — always visible -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Port <small>(default 102)</small>
+                        </label>
+                        <input type="number" name="port"
+                               class="w-full rounded-lg p-2.5 text-white"
+                               value="{{ values.get('port', '102') }}">
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Rack <small>(usually 0)</small>
+                        </label>
+                        <input type="number" name="rack"
+                               class="w-full rounded-lg p-2.5 text-white"
+                               value="{{ values.get('rack', '0') }}">
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Slot <small>(S7-300: 2 · S7-1200/1500: 1)</small>
+                        </label>
+                        <input type="number" name="slot"
+                               class="w-full rounded-lg p-2.5 text-white"
+                               value="{{ values.get('slot', '1') }}">
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Timeout (s)</label>
+                        <input type="number" name="timeout"
+                               class="w-full rounded-lg p-2.5 text-white"
+                               value="{{ values.get('timeout', '5') }}">
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Retries</label>
+                        <input type="number" name="retries"
+                               class="w-full rounded-lg p-2.5 text-white"
+                               value="{{ values.get('retries', '2') }}">
+                    </div>
+
+                    <!-- ── DB fields ──────────────────────────────────── -->
+                    <div id="row_max_dbs" class="md:col-span-2">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Max DBs to scan <small>(db_list)</small>
+                        </label>
+                        <input type="number" name="max_dbs"
+                               class="w-full rounded-lg p-2.5 text-white"
+                               value="{{ values.get('max_dbs', '100') }}">
+                    </div>
+
+                    <div id="row_db_number">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">DB Number</label>
+                        <input type="number" name="db_number"
+                               class="w-full rounded-lg p-2.5 text-white"
+                               placeholder="e.g., 1"
+                               value="{{ values.get('db_number', '1') }}">
+                    </div>
+                    <div id="row_start">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Start <small>(byte offset)</small>
+                        </label>
+                        <input type="number" name="start"
+                               class="w-full rounded-lg p-2.5 text-white"
+                               value="{{ values.get('start', '0') }}">
+                    </div>
+                    <div id="row_size">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Size <small>(bytes to read)</small>
+                        </label>
+                        <input type="number" name="size"
+                               class="w-full rounded-lg p-2.5 text-white"
+                               value="{{ values.get('size', '64') }}">
+                    </div>
+
+                    <!-- Area -->
+                    <div id="row_area">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Area <small>(I=Inputs · Q=Outputs · M=Merkers · T=Timers · C=Counters)</small>
+                        </label>
+                        <select name="area" class="w-full rounded-lg p-2.5 text-white">
+                            {% for a in ['I','Q','M','T','C'] %}
+                            <option value="{{ a }}" {% if values.get('area', 'M')==a %}selected{% endif %}>{{ a }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Data type -->
+                    <div id="row_data_type">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Data Type</label>
+                        <select name="data_type" class="w-full rounded-lg p-2.5 text-white">
+                            {% for dt in ['RAW','BOOL','BYTE','WORD','INT','DWORD','DINT','REAL','STRING'] %}
+                            <option value="{{ dt }}" {% if values.get('data_type','RAW')==dt %}selected{% endif %}>{{ dt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Write value -->
+                    <div id="row_value" class="md:col-span-2">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Value <small>(write target · RAW = hex string e.g. "00 FF")</small>
+                        </label>
+                        <input type="text" name="value"
+                               class="w-full rounded-lg p-2.5 text-white"
+                               placeholder="42 / 3.14 / true / 00 FF A1"
+                               value="{{ values.get('value', '') }}">
+                    </div>
+
+                    <!-- SZL ID -->
+                    <div id="row_szl_id" class="md:col-span-2">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            SZL ID <small>(hex, e.g. 0x0011 · blank = list known IDs)</small>
+                        </label>
+                        <input type="text" name="szl_id"
+                               class="w-full rounded-lg p-2.5 text-white fira"
+                               placeholder="0x0011"
+                               value="{{ values.get('szl_id', '') }}">
+                    </div>
+
+                </div><!-- /grid -->
+
+                <!-- Hint text -->
+                <p class="text-xs text-violet-500 mt-4" id="hint_text"></p>
+
+                <button type="submit"
+                        class="mt-4 w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                    Execute
+                </button>
+                <p class="text-xs text-gray-500 mt-3">
+                    ⚠️ For authorised testing only. Writes to a live PLC can affect physical processes.
+                </p>
+            </form>
+        </div><!-- /parameters -->
+
+        <!-- ═══════════════  OUTPUT  ════════════════════════════════════════ -->
+        <div class="bg-gray-800 rounded-lg shadow-2xl p-6 border border-gray-700">
+            <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">Output</h2>
+            <div class="bg-black rounded-lg p-4 h-[36rem] overflow-y-auto">
+                <pre class="text-sm whitespace-pre-wrap fira text-gray-300">{{ output | safe }}</pre>
+            </div>
+        </div>
+
+    </div><!-- /page grid -->
+</div>
+</div>
+
+<!-- ══════════════════════  JavaScript  ═══════════════════════════════════ -->
+<script>
+const ACTION_FIELDS = {
+    plc_info:    [],
+    list_blocks: [],
+    db_list:     ['row_max_dbs'],
+    db_read:     ['row_db_number', 'row_start', 'row_size', 'row_data_type'],
+    db_write:    ['row_db_number', 'row_start', 'row_data_type', 'row_value'],
+    area_read:   ['row_area', 'row_start', 'row_size', 'row_data_type'],
+    area_write:  ['row_area', 'row_start', 'row_data_type', 'row_value'],
+    szl_read:    ['row_szl_id'],
+};
+
+const ALL_OPTIONAL = [
+    'row_max_dbs', 'row_db_number', 'row_start', 'row_size',
+    'row_area', 'row_data_type', 'row_value', 'row_szl_id',
+];
+
+const HINTS = {
+    plc_info:    'Connects and reads CPU info, order code, firmware version, and protection level.',
+    list_blocks:'Returns the count of every block type (OB/FB/FC/DB/SDB/SFB/SFC) in the PLC program.',
+    db_list:     'Enumerates all Data Block numbers present in the PLC. Optionally shows their sizes.',
+    db_read:     'Reads raw bytes from a Data Block starting at the given offset.',
+    db_write:    'Writes a typed value to a specific offset inside a Data Block.',
+    area_read:   'Reads from a memory area: I=Inputs, Q=Outputs, M=Merkers, T=Timers, C=Counters.',
+    area_write:  'Writes to a memory area. Supported areas: I (Inputs), Q (Outputs), M (Merkers).',
+    szl_read:    'Reads a System Status List (SZL). Leave SZL ID blank to list known IDs.',
+};
+
+function updateFields() {
+    const action  = document.getElementById('action').value;
+    const visible = ACTION_FIELDS[action] || [];
+    ALL_OPTIONAL.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = visible.includes(id) ? '' : 'none';
+    });
+    document.getElementById('hint_text').textContent = HINTS[action] || '';
+}
+
+window.addEventListener('DOMContentLoaded', updateFields);
+</script>
+</body>
+</html>

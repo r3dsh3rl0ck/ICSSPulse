@@ -60,10 +60,12 @@ docker-compose exec icsspulse-light curl <URL>
 
 ## What's Included
 
-### Current Protocol Controllers (v1.0)
+### Current Protocol Controllers
 
 - **Modbus TCP Handler**
 - **OPC UA Handler**
+- **S7comm**
+- **MQTT**
 
 
 ### Infrastructure

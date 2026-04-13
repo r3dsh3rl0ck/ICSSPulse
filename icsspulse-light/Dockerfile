@@ -33,6 +33,7 @@ COPY app.py .
 COPY modbus_handler.py .
 COPY opcua_handler.py .
 COPY s7comm_handler.py .
+COPY mqtt_handler.py .
 COPY f.env .
 COPY docker-entrypoint.sh .
 COPY templates/ ./templates/

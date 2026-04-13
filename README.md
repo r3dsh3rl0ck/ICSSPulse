@@ -29,7 +29,7 @@ pip install -r requirements.txt
 # 4. Pull the RustScan Docker image (required for network scanning)
 docker pull rustscan/rustscan:latest
 
-# 5. Set your OpenAI API key (required for LLM reporting)
+# 5. Set your OpenAI API key (required for LLM reporting, Optional)
 export OPENAI_API_KEY="sk-..."    # Linux / macOS
 # set OPENAI_API_KEY=sk-...       # Windows
 
@@ -45,7 +45,7 @@ Then open your browser at **`http://127.0.0.1:5000`**.
 
 A minimal, self-contained containerised version of ICSSPulse. No Python environment setup required — just Docker.
 
-> **Includes:** Modbus TCP Handler OPC UA Handler s7comm Handler
+> **Includes:** Modbus TCP Handler, OPC UA Handler, s7comm Handler, MQTT Handler
 
 > **Excludes:** Network Scanner · LLM Reporting
 

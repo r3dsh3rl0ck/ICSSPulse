@@ -35,6 +35,12 @@ try:
 except ImportError:
     def handle_opcua(args):
         return f"--- DUMMY s7comm HANDLER ---\nTarget: {args.target}:{args.port}"
+    
+try:
+    from mqtt_handler import handle_mqtt
+except ImportError:
+    def handle_modbus(args):
+        return f"--- DUMMY MQTT HANDLER ---\nTarget: {args.target}:{args.port}"
 
 
 app = Flask(__name__)
@@ -113,6 +119,36 @@ def s7comm_page():
 
     return render_template('s7comm.html', output=output, values=form_values)
 
+# -------------------------
+# MQTT Controller
+# -------------------------
+@app.route('/mqtt', methods=['GET', 'POST'])
+def mqtt_page():
+    output      = ''
+    form_values = {}
+
+    if request.method == 'POST':
+        form_values = request.form.to_dict()
+
+        class Args:
+            def __init__(self):
+                self.action       = form_values.get('action', 'broker_info')
+                self.target       = form_values.get('target', '')
+                self.port         = int(form_values.get('port', 1883))
+                self.username     = form_values.get('username', '')
+                self.password     = form_values.get('password', '')
+                self.tls          = form_values.get('tls', 'false') == 'true'
+                self.client_id    = form_values.get('client_id', '')
+                self.topic        = form_values.get('topic', '#')
+                self.payload      = form_values.get('payload', '')
+                self.qos          = int(form_values.get('qos', 0))
+                self.retain       = form_values.get('retain', 'false')
+                self.timeout      = int(form_values.get('timeout', 10))
+                self.max_messages = int(form_values.get('max_messages', 200))
+
+        output = handle_mqtt(Args())
+
+    return render_template('mqtt.html', output=output, values=form_values)
 
 # -------------------------
 # OPC UA

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICSSPulse - MQTT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #111827; font-family: 'Inter', sans-serif; }
+        .fira { font-family: 'Fira Code', monospace; }
+        input, select {
+            background-color: #374151;
+            border-color: #4b5563;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #fb923c;
+            box-shadow: 0 0 0 2px rgba(251,146,60,0.25);
+        }
+        label small { color: #9CA3AF; }
+    </style>
+</head>
+<body class="text-gray-200">
+<div class="container mx-auto p-4 md:p-8">
+<div class="max-w-7xl mx-auto">
+
+    <a href="/" class="text-orange-400 hover:text-orange-300 mb-6 inline-block">&larr; Back to Menu</a>
+
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-white">MQTT Controller</h1>>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <!-- ═══════════════  PARAMETERS  ═══════════════════════════════════ -->
+        <div class="bg-gray-800 rounded-lg shadow-2xl p-6 border border-gray-700">
+            <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">Parameters</h2>
+
+            <form method="post" id="mqttForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <!-- Action -->
+                    <div class="md:col-span-2">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Action</label>
+                        <select name="action" id="action"
+                                class="w-full rounded-lg p-2.5 text-white" required
+                                onchange="updateFields()">
+                            <option value="broker_info"    {% if values.get('action','broker_info')=='broker_info'   %}selected{% endif %}>Broker Info (Fingerprint)</option>
+                            <option value="check_auth"     {% if values.get('action')=='check_auth'    %}selected{% endif %}>Check Auth</option>
+                            <option value="enumerate"      {% if values.get('action')=='enumerate'     %}selected{% endif %}>Enumerate Topics</option>
+                            <option value="retained_dump"  {% if values.get('action')=='retained_dump' %}selected{% endif %}>Retained Dump</option>
+                            <option value="subscribe"      {% if values.get('action')=='subscribe'     %}selected{% endif %}>Subscribe (Listen)</option>
+                            <option value="publish"        {% if values.get('action')=='publish'       %}selected{% endif %}>Publish (Inject)</option>
+                        </select>
+                    </div>
+
+                    <!-- Hint -->
+                    <div class="md:col-span-2">
+                        <p class="text-xs text-orange-500" id="hint_text"></p>
+                    </div>
+
+                    <!-- Target -->
+                    <div class="md:col-span-2">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Target IP / Hostname</label>
+                        <input type="text" name="target" required
+                               class="w-full rounded-lg p-2.5 text-white"
+                               placeholder="e.g., 192.168.1.10"
+                               value="{{ values.get('target', '') }}">
+                    </div>
+
+                    <!-- Port -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Port <small>(1883 plain · 8883 TLS)</small>
+                        </label>
+                        <input type="number" name="port"
+                               class="w-full rounded-lg p-2.5 text-white"
+                               value="{{ values.get('port', '1883') }}">
+                    </div>
+
+                    <!-- Timeout -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Timeout (s) <small>(listen window)</small>
+                        </label>
+                        <input type="number" name="timeout"
+                               class="w-full rounded-lg p-2.5 text-white"
+                               value="{{ values.get('timeout', '10') }}">
+                    </div>
+
+                    <!-- Username -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Username <small>(blank = anonymous)</small>
+                        </label>
+                        <input type="text" name="username"
+                               class="w-full rounded-lg p-2.5 text-white"
+                               placeholder="optional"
+                               value="{{ values.get('username', '') }}">
+                    </div>
+
+                    <!-- Password -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Password</label>
+                        <input type="password" name="password"
+                               class="w-full rounded-lg p-2.5 text-white"
+                               placeholder="optional"
+                               value="{{ values.get('password', '') }}">
+                    </div>
+
+                    <!-- TLS -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            TLS <small>(skips cert verify)</small>
+                        </label>
+                        <select name="tls" class="w-full rounded-lg p-2.5 text-white">
+                            <option value="false" {% if values.get('tls','false')=='false' %}selected{% endif %}>Disabled</option>
+                            <option value="true"  {% if values.get('tls')=='true'          %}selected{% endif %}>Enabled</option>
+                        </select>
+                    </div>
+
+                    <!-- Client ID -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Client ID <small>(blank = random)</small>
+                        </label>
+                        <input type="text" name="client_id"
+                               class="w-full rounded-lg p-2.5 text-white fira"
+                               placeholder="icsspulse-xxxxxx"
+                               value="{{ values.get('client_id', '') }}">
+                    </div>
+
+                    <!-- Topic (subscribe / publish) -->
+                    <div id="row_topic" class="md:col-span-2">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Topic <small>(# = all · + = single-level wildcard)</small>
+                        </label>
+                        <input type="text" name="topic"
+                               class="w-full rounded-lg p-2.5 text-white fira"
+                               placeholder="factory/line1/# or sensors/+/temp"
+                               value="{{ values.get('topic', '#') }}">
+                    </div>
+
+                    <!-- Payload (publish only) -->
+                    <div id="row_payload" class="md:col-span-2">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Payload <small>(message body to publish)</small>
+                        </label>
+                        <input type="text" name="payload"
+                               class="w-full rounded-lg p-2.5 text-white fira"
+                               placeholder='e.g., {"cmd":"STOP"} or 0 or true'
+                               value="{{ values.get('payload', '') }}">
+                    </div>
+
+                    <!-- QoS (subscribe / publish) -->
+                    <div id="row_qos">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            QoS <small>(0=fire-and-forget · 1=at least once · 2=exactly once)</small>
+                        </label>
+                        <select name="qos" class="w-full rounded-lg p-2.5 text-white">
+                            <option value="0" {% if values.get('qos','0')=='0' %}selected{% endif %}>0 — At most once</option>
+                            <option value="1" {% if values.get('qos')=='1'     %}selected{% endif %}>1 — At least once</option>
+                            <option value="2" {% if values.get('qos')=='2'     %}selected{% endif %}>2 — Exactly once</option>
+                        </select>
+                    </div>
+
+                    <!-- Retain (publish only) -->
+                    <div id="row_retain">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Retain <small>(broker stores last message)</small>
+                        </label>
+                        <select name="retain" class="w-full rounded-lg p-2.5 text-white">
+                            <option value="false" {% if values.get('retain','false')=='false' %}selected{% endif %}>No</option>
+                            <option value="true"  {% if values.get('retain')=='true'          %}selected{% endif %}>Yes</option>
+                        </select>
+                    </div>
+
+                    <!-- Max messages (subscribe / enumerate) -->
+                    <div id="row_max_messages" class="md:col-span-2">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Max Messages <small>(cap output lines)</small>
+                        </label>
+                        <input type="number" name="max_messages"
+                               class="w-full rounded-lg p-2.5 text-white"
+                               value="{{ values.get('max_messages', '200') }}">
+                    </div>
+
+                </div><!-- /grid -->
+
+                <button type="submit"
+                        class="mt-6 w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                    Execute
+                </button>
+                <p class="text-xs text-gray-500 mt-3">
+                    ⚠️ For authorised testing only. Publishing to live control topics can affect physical processes.
+                </p>
+            </form>
+        </div><!-- /parameters -->
+
+        <!-- ═══════════════  OUTPUT  ════════════════════════════════════════ -->
+        <div class="bg-gray-800 rounded-lg shadow-2xl p-6 border border-gray-700">
+            <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">Output</h2>
+            <div class="bg-black rounded-lg p-4 h-[36rem] overflow-y-auto">
+                <pre class="text-sm whitespace-pre-wrap fira text-gray-300">{{ output | safe }}</pre>
+            </div>
+        </div>
+
+    </div><!-- /page grid -->
+</div>
+</div>
+
+<!-- ═══════════════════════  JavaScript  ══════════════════════════════════════ -->
+<script>
+const ACTION_FIELDS = {
+    broker_info:   [],
+    check_auth:    [],
+    enumerate:     ['row_max_messages'],
+    retained_dump: [],
+    subscribe:     ['row_topic', 'row_qos', 'row_max_messages'],
+    publish:       ['row_topic', 'row_payload', 'row_qos', 'row_retain'],
+};
+
+const ALL_OPTIONAL = [
+    'row_topic', 'row_payload', 'row_qos', 'row_retain', 'row_max_messages',
+];
+
+const HINTS = {
+    broker_info:   'Connects and subscribes to $SYS/# — reveals broker software, version, uptime, and connected client stats.',
+    check_auth:    'Tests anonymous access first. If credentials are provided, also tests them. Reports whether the broker is open.',
+    enumerate:     'Subscribes to # and collects every unique topic seen during the listen window. Marks retained messages.',
+    retained_dump: 'Subscribes to # and immediately dumps all retained messages — last known state of every device on the broker.',
+    subscribe:     'Listens on a specific topic (supports + and # wildcards) and prints all messages received during the timeout.',
+    publish:       'Publishes a payload to a topic with a chosen QoS and optional retain flag — simulates command injection.',
+};
+
+function updateFields() {
+    const action  = document.getElementById('action').value;
+    const visible = ACTION_FIELDS[action] || [];
+    ALL_OPTIONAL.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = visible.includes(id) ? '' : 'none';
+    });
+    document.getElementById('hint_text').textContent = HINTS[action] || '';
+}
+
+window.addEventListener('DOMContentLoaded', updateFields);
+</script>
+</body>
+</html>

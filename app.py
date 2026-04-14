@@ -7,6 +7,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from  report_gen import add_to_report, get_report_items, clear_report_items, generate_report
 import tempfile
+from ethernetip_handler import handle_ethernetip
 
 env_path = Path(__file__).with_name('f.env')
 load_dotenv(dotenv_path=env_path)
@@ -149,6 +150,31 @@ def mqtt_page():
         output = handle_mqtt(Args())
 
     return render_template('mqtt.html', output=output, values=form_values)
+
+# -------------------------
+# EtherNet/IP
+# -------------------------
+
+@app.route('/ethernetip', methods=['GET', 'POST'])
+def ethernetip_page():
+    output      = ''
+    form_values = {}
+
+    if request.method == 'POST':
+        form_values = request.form.to_dict()
+
+        class Args:
+            def __init__(self):
+                self.action   = form_values.get('action', 'device_info')
+                self.target   = form_values.get('target', '')
+                self.slot     = form_values.get('slot', '0')
+                self.tag_name = form_values.get('tag_name', '')
+                self.value    = form_values.get('value', '')
+                self.max_tags = int(form_values.get('max_tags', 200))
+
+        output = handle_ethernetip(Args())
+
+    return render_template('ethernetip.html', output=output, values=form_values)
 
 # -------------------------
 # OPC UA

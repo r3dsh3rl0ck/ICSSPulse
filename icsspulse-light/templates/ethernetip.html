@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICSSPulse - EtherNet/IP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #111827; font-family: 'Inter', sans-serif; }
+        .fira { font-family: 'Fira Code', monospace; }
+        input, select {
+            background-color: #374151;
+            border-color: #4b5563;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 2px rgba(56,189,248,0.25);
+        }
+        label small { color: #9CA3AF; }
+    </style>
+</head>
+<body class="text-gray-200">
+<div class="container mx-auto p-4 md:p-8">
+<div class="max-w-7xl mx-auto">
+
+    <a href="/" class="text-blue-400 hover:text-blue-300 mb-6 inline-block">&larr; Back to Menu</a>
+
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-white">EtherNet/IP Controller</h1>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <!-- ═══════════════  PARAMETERS  ═══════════════════════════════════ -->
+        <div class="bg-gray-800 rounded-lg shadow-2xl p-6 border border-gray-700">
+            <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">Parameters</h2>
+
+            <form method="post" id="eipForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <!-- Action -->
+                    <div class="md:col-span-2">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Action</label>
+                        <select name="action" id="action"
+                                class="w-full rounded-lg p-2.5 text-white" required
+                                onchange="updateFields()">
+                            <option value="device_info" {% if values.get('action','device_info')=='device_info' %}selected{% endif %}>Device Info (Fingerprint)</option>
+                            <option value="list_tags"   {% if values.get('action')=='list_tags'   %}selected{% endif %}>List Tags</option>
+                            <option value="read_tag"    {% if values.get('action')=='read_tag'    %}selected{% endif %}>Read Tag</option>
+                            <option value="write_tag"   {% if values.get('action')=='write_tag'   %}selected{% endif %}>Write Tag</option>
+                            <option value="discover"    {% if values.get('action')=='discover'    %}selected{% endif %}>Discover Devices</option>
+                        </select>
+                    </div>
+
+                    <!-- Hint -->
+                    <div class="md:col-span-2">
+                        <p class="text-xs text-sky-500" id="hint_text"></p>
+                    </div>
+
+                    <!-- Target -->
+                    <div class="md:col-span-2">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Target IP <small>(use broadcast e.g. 192.168.1.255 for Discover)</small>
+                        </label>
+                        <input type="text" name="target" required
+                               class="w-full rounded-lg p-2.5 text-white"
+                               placeholder="e.g., 192.168.1.10"
+                               value="{{ values.get('target', '') }}">
+                    </div>
+
+                    <!-- Slot -->
+                    <div id="row_slot">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Slot <small>(ControlLogix: 0 · CompactLogix: 0)</small>
+                        </label>
+                        <input type="number" name="slot"
+                               class="w-full rounded-lg p-2.5 text-white"
+                               value="{{ values.get('slot', '0') }}">
+                    </div>
+
+                    <!-- Max Tags -->
+                    <div id="row_max_tags">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Max Tags <small>(cap output)</small>
+                        </label>
+                        <input type="number" name="max_tags"
+                               class="w-full rounded-lg p-2.5 text-white"
+                               value="{{ values.get('max_tags', '200') }}">
+                    </div>
+
+                    <!-- Tag Name -->
+                    <div id="row_tag_name" class="md:col-span-2">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Tag Name <small>(read: comma-separate multiple — e.g. Motor_Speed, Pump1_Run)</small>
+                        </label>
+                        <input type="text" name="tag_name"
+                               class="w-full rounded-lg p-2.5 text-white fira"
+                               placeholder="e.g., Motor_Speed"
+                               value="{{ values.get('tag_name', '') }}">
+                    </div>
+
+                    <!-- Value (write only) -->
+                    <div id="row_value" class="md:col-span-2">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">
+                            Value <small>(true/false · integer · float)</small>
+                        </label>
+                        <input type="text" name="value"
+                               class="w-full rounded-lg p-2.5 text-white fira"
+                               placeholder="e.g., 0 / 1450.5 / true"
+                               value="{{ values.get('value', '') }}">
+                    </div>
+
+                </div><!-- /grid -->
+
+                <button type="submit"
+                        class="mt-6 w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                    Execute
+                </button>
+                <p class="text-xs text-gray-500 mt-3">
+                    ⚠️ For authorised testing only. Writing tags on a live PLC can affect physical processes.
+                </p>
+            </form>
+        </div><!-- /parameters -->
+
+        <!-- ═══════════════  OUTPUT  ════════════════════════════════════════ -->
+        <div class="bg-gray-800 rounded-lg shadow-2xl p-6 border border-gray-700">
+            <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">Output</h2>
+            <div class="bg-black rounded-lg p-4 h-[36rem] overflow-y-auto">
+                <pre class="text-sm whitespace-pre-wrap fira text-gray-300">{{ output | safe }}</pre>
+            </div>
+        </div>
+
+    </div><!-- /page grid -->
+</div>
+</div>
+
+<!-- ═══════════════════════  JavaScript  ══════════════════════════════════════ -->
+<script>
+const ACTION_FIELDS = {
+    device_info : ['row_slot'],
+    list_tags   : ['row_slot', 'row_max_tags'],
+    read_tag    : ['row_slot', 'row_tag_name'],
+    write_tag   : ['row_slot', 'row_tag_name', 'row_value'],
+    discover    : [],
+};
+
+const ALL_OPTIONAL = ['row_slot', 'row_max_tags', 'row_tag_name', 'row_value'];
+
+const HINTS = {
+    device_info : 'Reads the mandatory CIP Identity Object — returns vendor, product name, firmware revision, serial number, and device status.',
+    list_tags   : 'Enumerates all named tags in the Logix controller program — equivalent to reading the full memory map.',
+    read_tag    : 'Reads one or more named tags by exact name. Separate multiple tags with commas.',
+    write_tag   : 'Writes a value to a single named tag. Type is inferred: true/false → BOOL, integers → DINT, decimals → REAL.',
+    discover    : 'Sends a CIP List Identity broadcast to discover all EtherNet/IP devices on the subnet. Use a broadcast IP (e.g., 192.168.1.255).',
+};
+
+function updateFields() {
+    const action  = document.getElementById('action').value;
+    const visible = ACTION_FIELDS[action] || [];
+    ALL_OPTIONAL.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = visible.includes(id) ? '' : 'none';
+    });
+    document.getElementById('hint_text').textContent = HINTS[action] || '';
+}
+
+window.addEventListener('DOMContentLoaded', updateFields);
+</script>
+</body>
+</html>

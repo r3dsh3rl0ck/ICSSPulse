@@ -3,6 +3,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, jsonify
 import snap7
+from ethernetip_handler import handle_ethernetip
 
 # Load environment variables
 env_path = Path(__file__).with_name('f.env')
@@ -74,6 +75,31 @@ def modbus_page():
             output = handle_modbus(args)
 
     return render_template('modbus.html', output=output, values=form_values)
+
+# -------------------------
+# EtherNet/IP
+# -------------------------
+
+@app.route('/ethernetip', methods=['GET', 'POST'])
+def ethernetip_page():
+    output      = ''
+    form_values = {}
+
+    if request.method == 'POST':
+        form_values = request.form.to_dict()
+
+        class Args:
+            def __init__(self):
+                self.action   = form_values.get('action', 'device_info')
+                self.target   = form_values.get('target', '')
+                self.slot     = form_values.get('slot', '0')
+                self.tag_name = form_values.get('tag_name', '')
+                self.value    = form_values.get('value', '')
+                self.max_tags = int(form_values.get('max_tags', 200))
+
+        output = handle_ethernetip(Args())
+
+    return render_template('ethernetip.html', output=output, values=form_values)
 
 # -------------------------
 # OPC UA

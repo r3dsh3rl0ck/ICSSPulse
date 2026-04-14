@@ -45,7 +45,7 @@ Then open your browser at **`http://127.0.0.1:5000`**.
 
 A minimal, self-contained containerised version of ICSSPulse. No Python environment setup required — just Docker.
 
-> **Includes:** Modbus TCP Handler, OPC UA Handler, s7comm Handler, MQTT Handler
+> **Includes:** Modbus TCP Handler, OPC UA Handler, s7comm Handler, MQTT Handler, EhterNet/IP Handler
 
 > **Excludes:** Network Scanner · LLM Reporting
 

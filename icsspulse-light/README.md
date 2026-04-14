@@ -66,6 +66,7 @@ docker-compose exec icsspulse-light curl <URL>
 - **OPC UA Handler**
 - **S7comm**
 - **MQTT**
+- **EtherNet/IP**
 
 
 ### Infrastructure
